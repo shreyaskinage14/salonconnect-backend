@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from api.deps import get_db, get_current_user
 from db.models import Employee, Service, Salon, User
@@ -61,7 +61,8 @@ def create_employee(
         name=employee.name,
         experience_years=employee.experience_years,
         service_id=employee.service_id,
-        salon_id=salon_id
+        salon_id=salon_id,
+        phone=employee.phone
     )
 
     db.add(new_employee)
@@ -71,21 +72,40 @@ def create_employee(
     return new_employee
 
 @router.get("/list", response_model=List[EmployeeResponse])
-def get_my_employees(
+def list_employees(
+    salon_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if current_user.role != "2" or current_user.role != "0":
+    if str(current_user.role) not in ["0", "2"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
-    salon = db.query(Salon).filter(Salon.owner_id == current_user.id).first()
-    if not salon:
+    target_salon_id = None
+
+    if salon_id:
+        if str(current_user.role) == "0":
+            target_salon_id = salon_id
+        else:
+            # Check ownership
+            salon = db.query(Salon).filter(Salon.id == salon_id, Salon.owner_id == current_user.id).first()
+            if not salon:
+                raise HTTPException(status_code=403, detail="You do not own this salon")
+            target_salon_id = salon.id
+    else:
+        # Default to user's salon if owner
+        salon = db.query(Salon).filter(Salon.owner_id == current_user.id).first()
+        if salon:
+            target_salon_id = salon.id
+
+    query = db.query(Employee).filter(Employee.is_active == True)
+    
+    if target_salon_id:
+        query = query.filter(Employee.salon_id == target_salon_id)
+    elif str(current_user.role) != "0":
+        # If not admin and no salon found (e.g. owner with no salon yet), return empty
          return []
 
-    return db.query(Employee).filter(
-        Employee.salon_id == salon.id,
-        Employee.is_active == True
-    ).all()
+    return query.all()
 
 @router.get("/service/{service_id}", response_model=List[EmployeeResponse])
 def get_employees_by_service(

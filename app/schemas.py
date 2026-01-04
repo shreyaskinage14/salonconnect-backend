@@ -147,13 +147,16 @@ class EmployeeCreate(BaseModel):
     name: str
     experience_years: int
     service_id: int
+
     salon_id: Optional[int] = None
+    phone: Optional[str] = None
 
 class EmployeeResponse(BaseModel):
     id: int
     name: str
     experience_years: int
     service_id: int
+    phone: Optional[str] = None
     salon_id: int
     is_active: bool
 

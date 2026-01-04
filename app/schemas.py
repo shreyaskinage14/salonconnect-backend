@@ -147,6 +147,7 @@ class EmployeeCreate(BaseModel):
     name: str
     experience_years: int
     service_id: int
+    salon_id: Optional[int] = None
 
 class EmployeeResponse(BaseModel):
     id: int

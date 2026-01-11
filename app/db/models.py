@@ -91,6 +91,7 @@ class Employee(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     experience_years = Column(Integer, nullable=False)
+    phone = Column(String, nullable=True)
 
     salon_id = Column(Integer, ForeignKey("salons.id"), nullable=False)
     service_id = Column(Integer, ForeignKey("services.id"), nullable=False)

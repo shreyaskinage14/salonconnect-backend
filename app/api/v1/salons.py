@@ -144,21 +144,19 @@ def create_salon_endpoint(
         # Check if user already exists
         existing_user = get_user_by_email(db, salon_in.owner_details.email)
         if existing_user:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User with this email already exists"
+            # Use existing user as owner
+            owner_id = existing_user.id
+        else:
+            # Create new owner (role "2")
+            new_owner = create_user(
+                db,
+                email=salon_in.owner_details.email,
+                password=salon_in.owner_details.password,
+                name=salon_in.owner_details.name,
+                phone=salon_in.owner_details.phone,
+                role=2  # Owner role
             )
-        
-        # Create new owner (role "2")
-        new_owner = create_user(
-            db,
-            email=salon_in.owner_details.email,
-            password=salon_in.owner_details.password,
-            name=salon_in.owner_details.name,
-            phone=salon_in.owner_details.phone,
-            role=2  # Owner role
-        )
-        owner_id = new_owner.id
+            owner_id = new_owner.id
     
     # CASE 2: Use current authenticated user if no new owner details provided
     else:

@@ -30,7 +30,7 @@ def _check_service_authorization(db: Session, user: User, salon_id: int):
         )
     return True
 
-@router.post("/", response_model=ServiceOut, status_code=status.HTTP_201_CREATED)
+@router.post("/{salon_id}", response_model=ServiceOut, status_code=status.HTTP_201_CREATED)
 def create_new_service(
     service_in: ServiceCreate,
     salon_id: int,

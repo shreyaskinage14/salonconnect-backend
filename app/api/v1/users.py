@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from api.deps import get_db, get_current_user
 from schemas import UserOut, UserUpdate
 from crud.user import get_users, update_user, delete_user, get_user
-from db.models import User
+from app.db.models import User
 
 router = APIRouter()
 

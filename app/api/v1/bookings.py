@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from crud.booking import create_booking, get_booking, list_user_bookings, list_salon_bookings, update_booking_status, delete_booking
 from schemas import BookingCreate, BookingOut
-from db import models
+from app.db import models
 from api.deps import get_db, get_current_user
 
 router = APIRouter()

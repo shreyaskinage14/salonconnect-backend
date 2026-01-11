@@ -1,7 +1,7 @@
 # app/crud/user.py
 from typing import List
 from sqlalchemy.orm import Session
-from db import models
+from app.db import models
 from passlib.context import CryptContext
 from fastapi import HTTPException, status
 

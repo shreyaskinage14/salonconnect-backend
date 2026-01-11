@@ -7,9 +7,9 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
-from db.session import SessionLocal
-from crud.user import get_user_by_email
-from core.security import decode_access_token
+from app.db.session import SessionLocal
+from app.crud.user import get_user_by_email
+from app.core.security import decode_access_token
 
 # HTTPBearer scheme - provides simple Bearer token input in Swagger UI
 # Users first login via /api/auth/login, then paste the access_token here

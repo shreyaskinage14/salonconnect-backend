@@ -13,7 +13,7 @@ from crud.user import create_user, get_user_by_email
 from schemas import SalonCreate, SalonOut
 from api.deps import get_db, get_current_user
 from core.security import decode_access_token
-from db.models import User
+from app.db.models import User
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from api.deps import bearer_scheme, optional_bearer_scheme
 

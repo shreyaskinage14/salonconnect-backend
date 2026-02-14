@@ -1,6 +1,6 @@
 # app/crud/service.py
 from sqlalchemy.orm import Session
-from db import models
+from app.db import models
 from typing import List, Optional
 
 def create_service(db: Session, salon_id: int, service_in) -> models.Service:

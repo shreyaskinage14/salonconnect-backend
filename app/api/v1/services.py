@@ -7,7 +7,7 @@ from crud.service import create_service, get_service, list_services_by_salon, up
 from crud.salon import get_salon
 from schemas import ServiceCreate, ServiceOut, ServiceUpdate
 from api.deps import get_db, get_current_user
-from db.models import User
+from app.db.models import User
 
 router = APIRouter()
 

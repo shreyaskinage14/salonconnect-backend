@@ -2,11 +2,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import Optional, List
-from datetime import datetime, time, timedelta, date
+from datetime import datetime, time, timedelta, date, timezone
 from zoneinfo import ZoneInfo
 
-from db import models
-from api.deps import get_db, get_current_user
+from app.db import models
+from app.api.deps import get_db, get_current_user
 
 router = APIRouter()
 
@@ -40,18 +40,24 @@ def get_availability_for_salon(
     if not salon:
         raise HTTPException(status_code=404, detail="Salon not found")
 
-    service = db.query(models.Service).filter(
-        models.Service.id == service_id, models.Service.salon_id == salon_id).first()
-    if not service:
-        raise HTTPException(
-            status_code=404, detail="Service not found for the given salon")
+    # Service validation removed: using fixed 1-hour slots
+    # service = db.query(models.Service).filter(
+    #     models.Service.id == service_id, models.Service.salon_id == salon_id).first()
+    # if not service:
+    #     raise HTTPException(
+    #         status_code=404, detail="Service not found for the given salon")
 
     # validate timezone on salon
-    try:
-        tz = ZoneInfo(salon.timezone or "UTC")
-    except Exception:
-        # fallback to UTC if invalid
-        tz = ZoneInfo("UTC")
+    # validate timezone on salon
+    salon_tz_str = salon.timezone or "UTC"
+    if salon_tz_str == "UTC":
+        tz = timezone.utc
+    else:
+        try:
+            tz = ZoneInfo(salon_tz_str)
+        except Exception:
+            # fallback to UTC if invalid
+            tz = timezone.utc
 
     def _fetch_bookings_between(start_dt_utc: datetime, end_dt_utc: datetime):
         return db.query(models.Booking).filter(
@@ -61,7 +67,7 @@ def get_availability_for_salon(
             models.Booking.status.in_(
                 [models.BookingStatus.pending.value, models.BookingStatus.approved.value])
         ).all()
-
+    print("_fetch_bookings_between", _fetch_bookings_between)
     result_slots = []
 
     def _generate_for_day_local(local_day: date):
@@ -78,20 +84,19 @@ def get_availability_for_salon(
         local_window_end = local_window_end.replace(tzinfo=tz)
 
         # convert to UTC for DB comparisons (DB stores UTC)
-        window_start_utc = local_window_start.astimezone(ZoneInfo("UTC"))
-        window_end_utc = local_window_end.astimezone(ZoneInfo("UTC"))
+        window_start_utc = local_window_start.astimezone(timezone.utc)
+        window_end_utc = local_window_end.astimezone(timezone.utc)
 
         # fetch existing bookings overlapping this window
         existing = _fetch_bookings_between(window_start_utc, window_end_utc)
         blocked = [(b.start_time, b.end_time) for b in existing]
 
-        slot_length = timedelta(minutes=service.duration_minutes)
+        # Fixed 1-hour slot length
+        slot_length = timedelta(minutes=60)
         padding = timedelta(minutes=slot_padding_minutes or 0)
 
-        # cursor should step in local time (we want local start times spaced e.g., every 15 minutes)
+        # cursor should step in slot_length + padding
         cursor_local = local_window_start
-        # slide step in minutes (15 min granularity)
-        slide = timedelta(minutes=15)
 
         while cursor_local + slot_length <= local_window_end:
             candidate_start_local = cursor_local
@@ -99,8 +104,8 @@ def get_availability_for_salon(
 
             # convert candidate to UTC to compare with booking times in DB
             candidate_start_utc = candidate_start_local.astimezone(
-                ZoneInfo("UTC"))
-            candidate_end_utc = candidate_end_local.astimezone(ZoneInfo("UTC"))
+                timezone.utc)
+            candidate_end_utc = candidate_end_local.astimezone(timezone.utc)
             padded_end_utc = candidate_end_utc + padding
 
             conflict = False
@@ -120,7 +125,8 @@ def get_availability_for_salon(
                 if len(result_slots) >= max_slots:
                     return
 
-            cursor_local = cursor_local + slide
+            # Move cursor to the end of the current slot plus padding
+            cursor_local = cursor_local + slot_length + padding
 
     if date_str:
         try:

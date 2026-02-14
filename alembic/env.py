@@ -34,7 +34,7 @@ target_metadata = Base.metadata
 
 def get_url():
     # Use the same logic as app/db/session.py
-    return os.getenv("DATABASE_URL", os.getenv("DATABASE_URL", "postgresql://salon:lTss13uzfPYOgo0nqEceBkXr60YOWHfR@dpg-d58njs75r7bs738qtp90-a.virginia-postgres.render.com/salon_db_0czk"))
+    return os.getenv("DATABASE_URL", os.getenv("DATABASE_URL", "postgresql://salon:u7LK1FC4yLg2Joc8qNwnch3UPNjTMfuq@dpg-d68cvn3h46gs73fd84qg-a.virginia-postgres.render.com/salon_db_cz7z"))
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

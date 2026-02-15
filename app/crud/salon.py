@@ -60,11 +60,13 @@ def get_salon(db: Session, salon_id: int) -> models.Salon:
     return db.query(models.Salon).filter(models.Salon.id == salon_id).first()
 
 
-def list_salons(db: Session, q: str = None, limit: int = 20, offset: int = 0) -> List[models.Salon]:
+def list_salons(db: Session, q: str = None, owner_id: int = None, limit: int = 20, offset: int = 0) -> List[models.Salon]:
     query = db.query(models.Salon)
     if q:
         q_like = f"%{q}%"
         query = query.filter(models.Salon.business_name.ilike(q_like))
+    if owner_id:
+        query = query.filter(models.Salon.owner_id == owner_id)
     return query.order_by(models.Salon.id.desc()).offset(offset).limit(limit).all()
 
 

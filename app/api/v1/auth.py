@@ -5,6 +5,8 @@ from pydantic import BaseModel
 
 from schemas import RegisterResponse, UserCreate, Token, ChangePassword, ChangePasswordByIdentifier
 from crud.user import get_user_by_email, create_user, get_user_by_mobile_number, verify_password, change_password
+from crud.salon import list_salons
+from app.db.models import Salon
 from core.security import create_access_token
 from api.deps import get_db, get_current_user
 
@@ -47,12 +49,16 @@ def login(payload: LoginIn, db: Session = Depends(get_db)):
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
     # include sanitized user object (without password) inside the token
     access_token = create_access_token(subject=user)
+    # Get salon_id using the salon listing approach
+    salons = list_salons(db, owner_id=user.id, limit=1)
+    salon_id = salons[0].id if salons else None
     user_data = {
         "id": user.id,
         "email": user.email,
         "name": user.name,
         "phone": user.phone,
         "role": user.role,
+        "salon_id": salon_id,
         "access_token": access_token,
         "token_type": "bearer"
     }
@@ -66,12 +72,16 @@ def login(payload: LoginInWithMobile, db: Session = Depends(get_db)):
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
     # include sanitized user object (without password) inside the token
     access_token = create_access_token(subject=user)
+    # Get salon_id using the salon listing approach
+    salons = list_salons(db, owner_id=user.id, limit=1)
+    salon_id = salons[0].id if salons else None
     user_data = {
         "id": user.id,
         "email": user.email,
         "name": user.name,
         "phone": user.phone,
         "role": user.role,
+        "salon_id": salon_id,
         "access_token": access_token,
         "token_type": "bearer"
     }
